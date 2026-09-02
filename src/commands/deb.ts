@@ -23,8 +23,8 @@ export function registerDebCommand(
     deb
         .command("stage")
         .requiredOption(
-            "--artifact <path>",
-            "Captain artifact directory"
+            "--staged <path>",
+            "Staged filesystem root"
         )
         .option(
             "--output <path>",
@@ -34,13 +34,13 @@ export function registerDebCommand(
         .action(
             (
                 options: {
-                    artifact: string;
+                    staged: string;
                     output: string;
                 }
             ) => {
-                const artifactDirectory =
+                const stagedDirectory =
                     path.resolve(
-                        options.artifact
+                        options.staged
                     );
 
                 const outputDirectory =
@@ -54,27 +54,7 @@ export function registerDebCommand(
                     version:
                         "1.0.0",
                     architecture:
-                        "amd64",
-                    mappings: [
-                        {
-                            source:
-                                "bin/vibrancy",
-                            destination:
-                                "/usr/bin/vibrancy"
-                        },
-                        {
-                            source:
-                                "vendor/runtime",
-                            destination:
-                                "/usr/lib/vibrancy"
-                        },
-                        {
-                            source:
-                                "config",
-                            destination:
-                                "/etc/vibrancy"
-                        }
-                    ]
+                        "amd64"
                 };
 
                 console.log(
@@ -84,12 +64,12 @@ export function registerDebCommand(
                 console.log("");
 
                 console.log(
-                    `Artifact: ${artifactDirectory}`
+                    `Staged filesystem: ${stagedDirectory}`
                 );
 
                 const result =
                     materializeDebRoot(
-                        artifactDirectory,
+                        stagedDirectory,
                         outputDirectory,
                         plan
                     );
@@ -127,21 +107,6 @@ export function registerDebCommand(
                         result.rootDirectory,
                         outputDirectory
                     );
-
-                console.log("");
-
-                console.log(
-                    "Install mappings:"
-                );
-
-                for (
-                    const mapping
-                    of result.copied
-                    ) {
-                    console.log(
-                        `  ✓ ${mapping.source} -> ${mapping.destination}`
-                    );
-                }
 
                 console.log("");
 

@@ -2,21 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-export interface DebPackageMapping {
-    source: string;
-    destination: string;
-}
-
 export interface DebPackagePlan {
     packageName: string;
     version: string;
     architecture: string;
-    mappings: DebPackageMapping[];
 }
 
 export interface DebMaterializeResult {
     rootDirectory: string;
-    copied: DebPackageMapping[];
 }
 
 export interface DebControlMetadata {
@@ -103,7 +96,7 @@ export function writeDebControl(
 }
 
 export function materializeDebRoot(
-    artifactDirectory: string,
+    stagedDirectory: string,
     outputDirectory: string,
     plan: DebPackagePlan
 ): DebMaterializeResult {
@@ -112,6 +105,22 @@ export function materializeDebRoot(
             outputDirectory,
             `${plan.packageName}_${plan.version}_${plan.architecture}`
         );
+
+    if (
+        !fs.existsSync(stagedDirectory)
+    ) {
+        throw new Error(
+            `Staged filesystem does not exist: ${stagedDirectory}`
+        );
+    }
+
+    if (
+        !fs.statSync(stagedDirectory).isDirectory()
+    ) {
+        throw new Error(
+            `Staged filesystem is not a directory: ${stagedDirectory}`
+        );
+    }
 
     fs.rmSync(
         packageRoot,
@@ -128,82 +137,16 @@ export function materializeDebRoot(
         }
     );
 
-    const copied: DebPackageMapping[] =
-        [];
-
-    for (
-        const mapping
-        of plan.mappings
-        ) {
-        const sourcePath =
-            path.resolve(
-                artifactDirectory,
-                mapping.source
-            );
-
-        if (
-            !fs.existsSync(
-                sourcePath
-            )
-        ) {
-            throw new Error(
-                `Missing artifact entry: ${mapping.source}`
-            );
+    fs.cpSync(
+        stagedDirectory,
+        packageRoot,
+        {
+            recursive: true
         }
-
-        const destinationPath =
-            ensureInsideRoot(
-                packageRoot,
-                mapping.destination
-            );
-
-        const sourceStats =
-            fs.statSync(
-                sourcePath
-            );
-
-        if (
-            sourceStats.isDirectory()
-        ) {
-            fs.mkdirSync(
-                destinationPath,
-                {
-                    recursive: true
-                }
-            );
-
-            fs.cpSync(
-                sourcePath,
-                destinationPath,
-                {
-                    recursive: true
-                }
-            );
-        } else {
-            fs.mkdirSync(
-                path.dirname(
-                    destinationPath
-                ),
-                {
-                    recursive: true
-                }
-            );
-
-            fs.copyFileSync(
-                sourcePath,
-                destinationPath
-            );
-        }
-
-        copied.push(
-            mapping
-        );
-    }
+    );
 
     return {
-        rootDirectory:
-        packageRoot,
-        copied
+        rootDirectory: packageRoot
     };
 }
 
