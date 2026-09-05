@@ -2,13 +2,13 @@ import {
     RpmPackagePlan,
     materializeRpmBuildRoot,
     writeRpmSpec,
-    buildRpmPackage
+    buildRpmPackage,
+    collectRpmFiles
 } from "../../core/rpmPackager.js";
 
-export interface RpmBuildOptions {
-    stagedDirectory: string;
-    outputDirectory: string;
-}
+import {
+    PackageDefinition
+} from "../../models/packageDefinition.js";
 
 export interface RpmBuildResult {
     packageFile: string;
@@ -16,15 +16,21 @@ export interface RpmBuildResult {
     specPath: string;
 }
 
+export interface RpmBuildOptions {
+    stagedDirectory: string;
+    outputDirectory: string;
+    package: PackageDefinition;
+}
+
 export function buildRpmPackageHandler(
     options: RpmBuildOptions
 ): RpmBuildResult {
 
     const plan: RpmPackagePlan = {
-        packageName: "vibrancy-nucleus",
-        version: "1.0.0",
-        release: "1",
-        architecture: "x86_64"
+        packageName: options.package.name,
+        version: options.package.version,
+        release: options.package.release ?? "1",
+        architecture: options.package.architecture
     };
 
     const result =
@@ -34,9 +40,16 @@ export function buildRpmPackageHandler(
             plan
         );
 
+    const files =
+        collectRpmFiles(
+            options.stagedDirectory
+        );
+
     writeRpmSpec(
         result.specPath,
-        plan
+        plan,
+        options.package,
+        files
     );
 
     const packageFile =

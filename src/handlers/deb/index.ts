@@ -8,9 +8,14 @@ import {
     patchElfRpath
 } from "../../core/debPackager.js";
 
+import {
+    PackageDefinition
+} from "../../models/packageDefinition.js";
+
 export interface DebBuildOptions {
     stagedDirectory: string;
     outputDirectory: string;
+    package: PackageDefinition;
 }
 
 export interface DebBuildResult {
@@ -24,9 +29,9 @@ export function buildDebPackageHandler(
 ): DebBuildResult {
 
     const plan: DebPackagePlan = {
-        packageName: "vibrancy-nucleus",
-        version: "1.0.0",
-        architecture: "amd64"
+        packageName: options.package.name,
+        version: options.package.version,
+        architecture: options.package.architecture
     };
 
     const result =
@@ -40,16 +45,14 @@ export function buildDebPackageHandler(
         writeDebControl(
             result.rootDirectory,
             {
-                packageName:
-                plan.packageName,
-                version:
-                plan.version,
-                architecture:
-                plan.architecture,
+                packageName: options.package.name,
+                version: options.package.version,
+                architecture: options.package.architecture,
                 maintainer:
+                    options.package.maintainer ??
                     "Captain CLI",
                 description:
-                    "Vibrancy Nucleus native audio engine"
+                options.package.description
             }
         );
 
@@ -72,8 +75,7 @@ export function buildDebPackageHandler(
 
     return {
         controlPath,
-        rootDirectory:
-        result.rootDirectory,
+        rootDirectory: result.rootDirectory,
         packageFile
     };
 }

@@ -5,9 +5,22 @@ import {
     buildDebPackageHandler
 } from "../handlers/deb/index.js";
 
+import {
+    PackageDefinition
+} from "../models/packageDefinition.js";
+
 export function registerDebCommand(
     program: Command
 ): void {
+
+    const packageDefinition: PackageDefinition = {
+        name: "vibrancy-nucleus",
+        version: "1.0.0",
+        architecture: "amd64",
+        description: "Vibrancy Nucleus native audio engine",
+        maintainer: "Captain CLI",
+        license: "Proprietary"
+    };
 
     const deb =
         program
@@ -58,7 +71,8 @@ export function registerDebCommand(
                 const result =
                     buildDebPackageHandler({
                         stagedDirectory,
-                        outputDirectory
+                        outputDirectory,
+                        package: packageDefinition
                     });
 
                 console.log("");

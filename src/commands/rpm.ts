@@ -5,9 +5,24 @@ import {
     buildRpmPackageHandler
 } from "../handlers/rpm/index.js";
 
+import {
+    PackageDefinition
+} from "../models/packageDefinition.js";
+
+
 export function registerRpmCommand(
     program: Command
 ): void {
+
+    const packageDefinition: PackageDefinition = {
+        name: "vibrancy-nucleus",
+        version: "1.0.0",
+        architecture: "x86_64",
+        description: "Vibrancy Nucleus native audio engine",
+        maintainer: "Captain CLI",
+        license: "Proprietary",
+        release: "1"
+    };
 
     const rpm =
         program
@@ -58,7 +73,8 @@ export function registerRpmCommand(
                 const result =
                     buildRpmPackageHandler({
                         stagedDirectory,
-                        outputDirectory
+                        outputDirectory,
+                        package: packageDefinition
                     });
 
                 console.log("");

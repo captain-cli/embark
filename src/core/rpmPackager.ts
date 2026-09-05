@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import {
+    PackageDefinition
+} from "../models/packageDefinition.js";
 
 export interface RpmPackagePlan {
     packageName: string;
@@ -13,6 +16,61 @@ export interface RpmMaterializeResult {
     buildRoot: string;
     topDirectory: string;
     specPath: string;
+}
+
+export function collectRpmFiles(
+    stagedDirectory: string
+): string[] {
+
+    const files: string[] = [];
+
+    function walk(
+        currentDirectory: string
+    ): void {
+
+        const entries =
+            fs.readdirSync(
+                currentDirectory,
+                {
+                    withFileTypes: true
+                }
+            );
+
+        for (const entry of entries) {
+
+            const entryPath =
+                path.join(
+                    currentDirectory,
+                    entry.name
+                );
+
+            if (entry.isDirectory()) {
+                walk(entryPath);
+                continue;
+            }
+
+            if (!entry.isFile()) {
+                continue;
+            }
+
+            const relativePath =
+                path.relative(
+                    stagedDirectory,
+                    entryPath
+                );
+
+            files.push(
+                "/" +
+                relativePath
+                    .split(path.sep)
+                    .join("/")
+            );
+        }
+    }
+
+    walk(stagedDirectory);
+
+    return files.sort();
 }
 
 export function materializeRpmBuildRoot(
@@ -85,25 +143,27 @@ export function materializeRpmBuildRoot(
 
 export function writeRpmSpec(
     specPath: string,
-    plan: RpmPackagePlan
+    plan: RpmPackagePlan,
+    packageDefinition: PackageDefinition,
+    files: string[]
 ): void {
+
+    const fileList =
+        files.join("\n");
 
     const spec = `
 Name: ${plan.packageName}
 Version: ${plan.version}
 Release: ${plan.release}
-Summary: Vibrancy Nucleus native audio engine
-
-License: Proprietary
+Summary: ${packageDefinition.description}
+License: ${packageDefinition.license ?? "Unspecified"}
 BuildArch: ${plan.architecture}
 
 %description
-Vibrancy Nucleus native audio engine.
+${packageDefinition.description}
 
 %files
-/usr/bin/vibrancy
-/usr/lib/vibrancy/*
-/etc/vibrancy/vibrancy.json
+${fileList}
 `;
 
     fs.writeFileSync(
