@@ -6,6 +6,10 @@ import {
     registerDebCommand
 } from "./commands/deb.js";
 
+import {
+    registerRpmCommand
+} from "./commands/rpm.js";
+
 const program =
     new Command();
 
@@ -19,6 +23,10 @@ program
     );
 
 registerDebCommand(
+    program
+);
+
+registerRpmCommand(
     program
 );
 
