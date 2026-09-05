@@ -58,7 +58,7 @@ export function registerDebCommand(
                 };
 
                 console.log(
-                    "Debian Package Stage"
+                    "Debian Package Build"
                 );
 
                 console.log("");
@@ -131,7 +131,7 @@ export function registerDebCommand(
                 console.log("");
 
                 console.log(
-                    "Stage result: succeeded"
+                    "Build result: succeeded"
                 );
             }
         );
