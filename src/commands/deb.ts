@@ -2,26 +2,16 @@ import { Command } from "commander";
 import path from "node:path";
 
 import {
-    buildDebPackageHandler
-} from "../handlers/deb/index.js";
+    loadPackageDefinition
+} from "../core/packageDefinition.js";
 
 import {
-    PackageDefinition
-} from "../models/packageDefinition.js";
+    buildDebPackageHandler
+} from "../handlers/deb/index.js";
 
 export function registerDebCommand(
     program: Command
 ): void {
-
-    const packageDefinition: PackageDefinition = {
-        name: "vibrancy-nucleus",
-        version: "1.0.0",
-        architecture: "amd64",
-        description: "Vibrancy Nucleus native audio engine",
-        maintainer: "Captain CLI",
-        license: "Proprietary"
-    };
-
     const deb =
         program
             .command("deb")
@@ -36,6 +26,11 @@ export function registerDebCommand(
             "Staged filesystem root"
         )
         .option(
+            "--package <path>",
+            "Embark package definition",
+            "embark.package.json"
+        )
+        .option(
             "--output <path>",
             "Embark output directory",
             ".embark/deb"
@@ -44,10 +39,10 @@ export function registerDebCommand(
             (
                 options: {
                     staged: string;
+                    package: string;
                     output: string;
                 }
             ) => {
-
                 const stagedDirectory =
                     path.resolve(
                         options.staged
@@ -58,6 +53,11 @@ export function registerDebCommand(
                         options.output
                     );
 
+                const packageDefinition =
+                    loadPackageDefinition(
+                        options.package
+                    );
+
                 console.log(
                     "Debian Package Build"
                 );
@@ -66,6 +66,10 @@ export function registerDebCommand(
 
                 console.log(
                     `Staged filesystem: ${stagedDirectory}`
+                );
+
+                console.log(
+                    `Package definition: ${path.resolve(options.package)}`
                 );
 
                 const result =
@@ -89,12 +93,6 @@ export function registerDebCommand(
 
                 console.log(
                     `Debian package: ${result.packageFile}`
-                );
-
-                console.log("");
-
-                console.log(
-                    "Package result: succeeded"
                 );
 
                 console.log("");

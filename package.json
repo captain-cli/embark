@@ -1,20 +1,23 @@
 {
-  "name": "embark",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@captain-cli/embark",
+  "version": "0.1.0-dev.0",
+  "description": "Captain native package builder",
+  "main": "dist/cli.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "npm run build && node --test dist/tests/*.test.js"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Captain CLI",
+  "license": "Proprietary",
   "dependencies": {
     "commander": "^15.0.0"
   },
   "devDependencies": {
     "@types/node": "^26.4.0",
     "typescript": "^7.0.2"
+  },
+  "bin": {
+    "embark": "dist/cli.js"
   }
 }

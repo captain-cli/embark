@@ -1,12 +1,19 @@
-import path from "node:path";
-
 import {
     DebPackagePlan,
     materializeDebRoot,
     writeDebControl,
-    buildDebPackage,
-    patchElfRpath
+    writeDebConffiles,
+    buildDebPackage
 } from "../../core/debPackager.js";
+
+import {
+    mapDebArchitecture,
+    validatePackageAgainstStagedRoot
+} from "../../core/packageDefinition.js";
+
+import {
+    applyPackageTransforms
+} from "../../core/packageTransforms.js";
 
 import {
     PackageDefinition
@@ -27,11 +34,20 @@ export interface DebBuildResult {
 export function buildDebPackageHandler(
     options: DebBuildOptions
 ): DebBuildResult {
+    validatePackageAgainstStagedRoot(
+        options.stagedDirectory,
+        options.package
+    );
+
+    const architecture =
+        mapDebArchitecture(
+            options.package.architecture
+        );
 
     const plan: DebPackagePlan = {
         packageName: options.package.name,
         version: options.package.version,
-        architecture: options.package.architecture
+        architecture
     };
 
     const result =
@@ -47,24 +63,23 @@ export function buildDebPackageHandler(
             {
                 packageName: options.package.name,
                 version: options.package.version,
-                architecture: options.package.architecture,
+                architecture,
                 maintainer:
                     options.package.maintainer ??
                     "Captain CLI",
                 description:
-                options.package.description
+                    options.package.description
             }
         );
 
-    const stagedBinary =
-        path.join(
-            result.rootDirectory,
-            "usr/bin/vibrancy"
-        );
+    writeDebConffiles(
+        result.rootDirectory,
+        options.package.configFiles ?? []
+    );
 
-    patchElfRpath(
-        stagedBinary,
-        "$ORIGIN/../lib/vibrancy"
+    applyPackageTransforms(
+        result.rootDirectory,
+        options.package.transforms
     );
 
     const packageFile =

@@ -20,38 +20,6 @@ export interface DebControlMetadata {
     description: string;
 }
 
-function ensureInsideRoot(
-    rootDirectory: string,
-    destination: string
-): string {
-    const relativeDestination =
-        destination.replace(/^\/+/, "");
-
-    const resolved =
-        path.resolve(
-            rootDirectory,
-            relativeDestination
-        );
-
-    const resolvedRoot =
-        path.resolve(
-            rootDirectory
-        );
-
-    if (
-        resolved !== resolvedRoot &&
-        !resolved.startsWith(
-            resolvedRoot + path.sep
-        )
-    ) {
-        throw new Error(
-            `Destination escapes package root: ${destination}`
-        );
-    }
-
-    return resolved;
-}
-
 export function writeDebControl(
     packageRoot: string,
     metadata: DebControlMetadata
@@ -95,6 +63,52 @@ export function writeDebControl(
     return controlPath;
 }
 
+export function writeDebConffiles(
+    packageRoot: string,
+    configFiles: readonly string[]
+): string | null {
+    if (configFiles.length === 0) {
+        return null;
+    }
+
+    const debianDirectory =
+        path.join(
+            packageRoot,
+            "DEBIAN"
+        );
+
+    fs.mkdirSync(
+        debianDirectory,
+        {
+            recursive: true
+        }
+    );
+
+    const conffilesPath =
+        path.join(
+            debianDirectory,
+            "conffiles"
+        );
+
+    const contents =
+        configFiles
+            .map(
+                file =>
+                    `/${file.replace(/^\/+/, "")}`
+            )
+            .join("\n") + "\n";
+
+    fs.writeFileSync(
+        conffilesPath,
+        contents,
+        {
+            mode: 0o644
+        }
+    );
+
+    return conffilesPath;
+}
+
 export function materializeDebRoot(
     stagedDirectory: string,
     outputDirectory: string,
@@ -106,17 +120,13 @@ export function materializeDebRoot(
             `${plan.packageName}_${plan.version}_${plan.architecture}`
         );
 
-    if (
-        !fs.existsSync(stagedDirectory)
-    ) {
+    if (!fs.existsSync(stagedDirectory)) {
         throw new Error(
             `Staged filesystem does not exist: ${stagedDirectory}`
         );
     }
 
-    if (
-        !fs.statSync(stagedDirectory).isDirectory()
-    ) {
+    if (!fs.statSync(stagedDirectory).isDirectory()) {
         throw new Error(
             `Staged filesystem is not a directory: ${stagedDirectory}`
         );
@@ -198,32 +208,4 @@ export function buildDebPackage(
     }
 
     return packageFile;
-}
-
-export function patchElfRpath(
-    binaryPath: string,
-    rpath: string
-): void {
-    const result =
-        spawnSync(
-            "patchelf",
-            [
-                "--set-rpath",
-                rpath,
-                binaryPath
-            ],
-            {
-                stdio: "inherit"
-            }
-        );
-
-    if (result.error) {
-        throw result.error;
-    }
-
-    if (result.status !== 0) {
-        throw new Error(
-            `patchelf failed with exit code ${result.status}`
-        );
-    }
 }

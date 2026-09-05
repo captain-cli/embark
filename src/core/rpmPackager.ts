@@ -79,6 +79,18 @@ export function materializeRpmBuildRoot(
     plan: RpmPackagePlan
 ): RpmMaterializeResult {
 
+    if (!fs.existsSync(stagedDirectory)) {
+        throw new Error(
+            `Staged filesystem does not exist: ${stagedDirectory}`
+        );
+    }
+
+    if (!fs.statSync(stagedDirectory).isDirectory()) {
+        throw new Error(
+            `Staged filesystem is not a directory: ${stagedDirectory}`
+        );
+    }
+
     const topDirectory =
         path.join(
             outputDirectory,
@@ -148,8 +160,24 @@ export function writeRpmSpec(
     files: string[]
 ): void {
 
+    const configFiles =
+        new Set(
+            (packageDefinition.configFiles ?? [])
+                .map(
+                    file =>
+                        "/" + file.replace(/^\/+/, "")
+                )
+        );
+
     const fileList =
-        files.join("\n");
+        files
+            .map(
+                file =>
+                    configFiles.has(file)
+                        ? `%config(noreplace) ${file}`
+                        : file
+            )
+            .join("\n");
 
     const spec = `
 Name: ${plan.packageName}

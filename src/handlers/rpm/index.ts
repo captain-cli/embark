@@ -7,6 +7,15 @@ import {
 } from "../../core/rpmPackager.js";
 
 import {
+    mapRpmArchitecture,
+    validatePackageAgainstStagedRoot
+} from "../../core/packageDefinition.js";
+
+import {
+    applyPackageTransforms
+} from "../../core/packageTransforms.js";
+
+import {
     PackageDefinition
 } from "../../models/packageDefinition.js";
 
@@ -25,12 +34,19 @@ export interface RpmBuildOptions {
 export function buildRpmPackageHandler(
     options: RpmBuildOptions
 ): RpmBuildResult {
+    validatePackageAgainstStagedRoot(
+        options.stagedDirectory,
+        options.package
+    );
 
     const plan: RpmPackagePlan = {
         packageName: options.package.name,
         version: options.package.version,
         release: options.package.release ?? "1",
-        architecture: options.package.architecture
+        architecture:
+            mapRpmArchitecture(
+                options.package.architecture
+            )
     };
 
     const result =
@@ -40,9 +56,14 @@ export function buildRpmPackageHandler(
             plan
         );
 
+    applyPackageTransforms(
+        result.buildRoot,
+        options.package.transforms
+    );
+
     const files =
         collectRpmFiles(
-            options.stagedDirectory
+            result.buildRoot
         );
 
     writeRpmSpec(
@@ -60,9 +81,7 @@ export function buildRpmPackageHandler(
 
     return {
         packageFile,
-        buildRoot:
-        result.buildRoot,
-        specPath:
-        result.specPath
+        buildRoot: result.buildRoot,
+        specPath: result.specPath
     };
 }

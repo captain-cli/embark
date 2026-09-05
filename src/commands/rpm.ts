@@ -2,28 +2,16 @@ import { Command } from "commander";
 import path from "node:path";
 
 import {
-    buildRpmPackageHandler
-} from "../handlers/rpm/index.js";
+    loadPackageDefinition
+} from "../core/packageDefinition.js";
 
 import {
-    PackageDefinition
-} from "../models/packageDefinition.js";
-
+    buildRpmPackageHandler
+} from "../handlers/rpm/index.js";
 
 export function registerRpmCommand(
     program: Command
 ): void {
-
-    const packageDefinition: PackageDefinition = {
-        name: "vibrancy-nucleus",
-        version: "1.0.0",
-        architecture: "x86_64",
-        description: "Vibrancy Nucleus native audio engine",
-        maintainer: "Captain CLI",
-        license: "Proprietary",
-        release: "1"
-    };
-
     const rpm =
         program
             .command("rpm")
@@ -38,6 +26,11 @@ export function registerRpmCommand(
             "Staged filesystem root"
         )
         .option(
+            "--package <path>",
+            "Embark package definition",
+            "embark.package.json"
+        )
+        .option(
             "--output <path>",
             "Embark output directory",
             ".embark/rpm"
@@ -46,10 +39,10 @@ export function registerRpmCommand(
             (
                 options: {
                     staged: string;
+                    package: string;
                     output: string;
                 }
             ) => {
-
                 const stagedDirectory =
                     path.resolve(
                         options.staged
@@ -60,6 +53,11 @@ export function registerRpmCommand(
                         options.output
                     );
 
+                const packageDefinition =
+                    loadPackageDefinition(
+                        options.package
+                    );
+
                 console.log(
                     "RPM Package Build"
                 );
@@ -68,6 +66,10 @@ export function registerRpmCommand(
 
                 console.log(
                     `Staged filesystem: ${stagedDirectory}`
+                );
+
+                console.log(
+                    `Package definition: ${path.resolve(options.package)}`
                 );
 
                 const result =
