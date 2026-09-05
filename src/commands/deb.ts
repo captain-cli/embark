@@ -21,7 +21,7 @@ export function registerDebCommand(
             );
 
     deb
-        .command("stage")
+        .command("build")
         .requiredOption(
             "--staged <path>",
             "Staged filesystem root"
