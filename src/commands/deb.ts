@@ -2,12 +2,8 @@ import { Command } from "commander";
 import path from "node:path";
 
 import {
-    DebPackagePlan,
-    materializeDebRoot,
-    writeDebControl,
-    buildDebPackage,
-    patchElfRpath
-} from "../core/debPackager.js";
+    buildDebPackageHandler
+} from "../handlers/deb/index.js";
 
 export function registerDebCommand(
     program: Command
@@ -38,6 +34,7 @@ export function registerDebCommand(
                     output: string;
                 }
             ) => {
+
                 const stagedDirectory =
                     path.resolve(
                         options.staged
@@ -47,15 +44,6 @@ export function registerDebCommand(
                     path.resolve(
                         options.output
                     );
-
-                const plan: DebPackagePlan = {
-                    packageName:
-                        "vibrancy-nucleus",
-                    version:
-                        "1.0.0",
-                    architecture:
-                        "amd64"
-                };
 
                 console.log(
                     "Debian Package Build"
@@ -68,50 +56,15 @@ export function registerDebCommand(
                 );
 
                 const result =
-                    materializeDebRoot(
+                    buildDebPackageHandler({
                         stagedDirectory,
-                        outputDirectory,
-                        plan
-                    );
-
-                const controlPath =
-                    writeDebControl(
-                        result.rootDirectory,
-                        {
-                            packageName:
-                            plan.packageName,
-                            version:
-                            plan.version,
-                            architecture:
-                            plan.architecture,
-                            maintainer:
-                                "Captain CLI",
-                            description:
-                                "Vibrancy Nucleus native audio engine"
-                        }
-                    );
-
-                const stagedBinary =
-                    path.join(
-                        result.rootDirectory,
-                        "usr/bin/vibrancy"
-                    );
-
-                patchElfRpath(
-                    stagedBinary,
-                    "$ORIGIN/../lib/vibrancy"
-                );
-
-                const packageFile =
-                    buildDebPackage(
-                        result.rootDirectory,
                         outputDirectory
-                    );
+                    });
 
                 console.log("");
 
                 console.log(
-                    `Control file: ${controlPath}`
+                    `Control file: ${result.controlPath}`
                 );
 
                 console.log(
@@ -119,11 +72,13 @@ export function registerDebCommand(
                 );
 
                 console.log("");
+
                 console.log(
-                    `Debian package: ${packageFile}`
+                    `Debian package: ${result.packageFile}`
                 );
 
                 console.log("");
+
                 console.log(
                     "Package result: succeeded"
                 );
