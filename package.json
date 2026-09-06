@@ -11,7 +11,7 @@
   "author": "Captain CLI",
   "license": "Proprietary",
   "dependencies": {
-    "commander": "^15.0.0"
+    "commander": "^14.0.3"
   },
   "devDependencies": {
     "@types/node": "^26.4.0",
