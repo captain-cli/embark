@@ -82,3 +82,59 @@ test(
         );
     }
 );
+
+test(
+    "normalizes Debian control directory permissions when setgid is inherited",
+    () => {
+        const root =
+            fs.mkdtempSync(
+                path.join(
+                    os.tmpdir(),
+                    "embark-deb-mode-"
+                )
+            );
+
+        const debianDirectory =
+            path.join(
+                root,
+                "DEBIAN"
+            );
+
+        /*
+         * Reproduce a package tree created beneath a setgid workspace.
+         * dpkg-deb rejects DEBIAN directories carrying the setgid bit.
+         */
+        fs.mkdirSync(
+            debianDirectory,
+            {
+                mode: 0o775
+            }
+        );
+
+        fs.chmodSync(
+            debianDirectory,
+            0o2775
+        );
+
+        assert.equal(
+            fs.statSync(debianDirectory).mode & 0o7777,
+            0o2775
+        );
+
+        writeDebControl(
+            root,
+            {
+                packageName: "example",
+                version: "1.0.0",
+                architecture: "amd64",
+                maintainer: "Captain CLI",
+                description: "Permission normalization test"
+            }
+        );
+
+        assert.equal(
+            fs.statSync(debianDirectory).mode & 0o7777,
+            0o755
+        );
+    }
+);

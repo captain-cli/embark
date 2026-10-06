@@ -33,8 +33,17 @@ export function writeDebControl(
     fs.mkdirSync(
         debianDirectory,
         {
-            recursive: true
+            recursive: true,
+            mode: 0o755
         }
+    );
+
+    // dpkg-deb requires DEBIAN to have ordinary directory permissions.
+    // Explicit chmod is necessary because mkdir mode does not alter an
+    // existing directory and parent directories may carry setgid.
+    fs.chmodSync(
+        debianDirectory,
+        0o755
     );
 
     const controlPath =
@@ -80,8 +89,17 @@ export function writeDebConffiles(
     fs.mkdirSync(
         debianDirectory,
         {
-            recursive: true
+            recursive: true,
+            mode: 0o755
         }
+    );
+
+    // dpkg-deb requires DEBIAN to have ordinary directory permissions.
+    // Explicit chmod is necessary because mkdir mode does not alter an
+    // existing directory and parent directories may carry setgid.
+    fs.chmodSync(
+        debianDirectory,
+        0o755
     );
 
     const conffilesPath =

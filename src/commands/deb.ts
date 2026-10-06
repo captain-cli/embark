@@ -4,6 +4,7 @@ import path from "node:path";
 import {
     loadPackageDefinition
 } from "../core/packageDefinition.js";
+import { loadCaptainPackageDefinition } from "../core/captainProject.js";
 
 import {
     buildDebPackageHandler
@@ -27,8 +28,11 @@ export function registerDebCommand(
         )
         .option(
             "--package <path>",
-            "Embark package definition",
-            "embark.package.json"
+            "Legacy standalone Embark package definition"
+        )
+        .option(
+            "--project <directory>",
+            "Captain project directory; resolves the Captain-owned embark configuration"
         )
         .option(
             "--output <path>",
@@ -39,7 +43,8 @@ export function registerDebCommand(
             (
                 options: {
                     staged: string;
-                    package: string;
+                    package?: string;
+                    project?: string;
                     output: string;
                 }
             ) => {
@@ -53,10 +58,18 @@ export function registerDebCommand(
                         options.output
                     );
 
-                const packageDefinition =
-                    loadPackageDefinition(
-                        options.package
-                    );
+                if (options.project && options.package) {
+                    throw new Error("Use either --project or --package, not both.");
+                }
+
+                const resolvedPackage = options.project
+                    ? loadCaptainPackageDefinition(options.project)
+                    : {
+                        package: loadPackageDefinition(options.package ?? "embark.package.json"),
+                        source: path.resolve(options.package ?? "embark.package.json")
+                    };
+
+                const packageDefinition = resolvedPackage.package;
 
                 console.log(
                     "Debian Package Build"
@@ -69,7 +82,7 @@ export function registerDebCommand(
                 );
 
                 console.log(
-                    `Package definition: ${path.resolve(options.package)}`
+                    `Package definition: ${resolvedPackage.source}`
                 );
 
                 const result =
