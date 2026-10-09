@@ -11,6 +11,7 @@ import {
 } from "../core/debPackager.js";
 
 
+
 test(
     "writes Debian control metadata generically",
     () => {
@@ -48,6 +49,11 @@ test(
         assert.match(
             contents,
             /Architecture: amd64/
+        );
+
+        assert.doesNotMatch(
+            contents,
+            /^Depends:/m
         );
     }
 );
@@ -194,6 +200,44 @@ test(
             );
         } finally {
             fs.rmSync(workspace, {
+                recursive: true,
+                force: true
+            });
+        }
+    }
+);
+
+test(
+    "writes Debian dependencies when declared",
+    () => {
+        const root = fs.mkdtempSync(
+            path.join(os.tmpdir(), "embark-depends-")
+        );
+
+        try {
+            const controlPath = writeDebControl(root, {
+                packageName: "example",
+                version: "1.0.0",
+                architecture: "amd64",
+                maintainer: "Captain CLI",
+                description: "Dependency test",
+                dependencies: [
+                    "libc6 (>= 2.34)",
+                    "libstdc++6"
+                ]
+            });
+
+            const contents = fs.readFileSync(
+                controlPath,
+                "utf8"
+            );
+
+            assert.match(
+                contents,
+                /^Depends: libc6 \(>= 2\.34\), libstdc\+\+6$/m
+            );
+        } finally {
+            fs.rmSync(root, {
                 recursive: true,
                 force: true
             });

@@ -68,7 +68,9 @@ export function buildDebPackageHandler(
                     options.package.maintainer ??
                     "Captain CLI",
                 description:
-                    options.package.description
+                    options.package.description,
+                dependencies:
+                    options.package.dependencies
             }
         );
 

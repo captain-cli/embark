@@ -18,6 +18,7 @@ export interface DebControlMetadata {
     architecture: string;
     maintainer: string;
     description: string;
+    dependencies?: string[];
 }
 
 export function writeDebControl(
@@ -57,6 +58,9 @@ export function writeDebControl(
         `Version: ${metadata.version}`,
         `Architecture: ${metadata.architecture}`,
         `Maintainer: ${metadata.maintainer}`,
+        ...(metadata.dependencies?.length
+            ? [`Depends: ${metadata.dependencies.join(", ")}`]
+            : []),
         `Description: ${metadata.description}`,
         ""
     ].join("\n");

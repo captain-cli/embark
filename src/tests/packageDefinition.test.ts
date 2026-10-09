@@ -114,3 +114,55 @@ test(
         );
     }
 );
+
+test(
+    "parses package dependencies",
+    () => {
+        const definition = parsePackageDefinition({
+            name: "example",
+            version: "1.0.0",
+            architecture: "x86_64",
+            description: "Example",
+            dependencies: [
+                "libc6 (>= 2.34)",
+                "libstdc++6"
+            ]
+        });
+
+        assert.deepEqual(
+            definition.dependencies,
+            [
+                "libc6 (>= 2.34)",
+                "libstdc++6"
+            ]
+        );
+    }
+);
+
+test(
+    "rejects invalid package dependencies",
+    () => {
+        const base = {
+            name: "example",
+            version: "1.0.0",
+            architecture: "x86_64",
+            description: "Example"
+        };
+
+        for (const dependencies of [
+            "libc6",
+            [""],
+            ["libc6\nMaintainer: injected"],
+            [123],
+            ["libc6 (>= )"]
+        ]) {
+            assert.throws(
+                () => parsePackageDefinition({
+                    ...base,
+                    dependencies
+                }),
+                /dependenc/i
+            );
+        }
+    }
+);

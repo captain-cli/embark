@@ -14,6 +14,7 @@ export interface PackageDefinition {
     version: string;
     architecture: CanonicalArchitecture;
     description: string;
+    dependencies?: string[];
 
     maintainer?: string;
     license?: string;

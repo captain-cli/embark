@@ -162,6 +162,43 @@ function parseConfigFiles(
     );
 }
 
+function parseDependencies(
+    value: unknown
+): string[] | undefined {
+    if (value === undefined) {
+        return undefined;
+    }
+
+    if (!Array.isArray(value)) {
+        throw new Error(
+            'Package definition field "dependencies" must be an array.'
+        );
+    }
+
+    return value.map((entry, index) => {
+        if (typeof entry !== "string") {
+            throw new Error(
+                `Dependency at index ${index} must be a string.`
+            );
+        }
+
+        const dependency = entry.trim();
+
+        // Simple Debian-compatible package names with optional
+        // version constraints.
+        const pattern =
+            /^[a-z0-9][a-z0-9+.-]*(?:\s+\((?:>=|<=|=|>>|<<)\s+[A-Za-z0-9.+:~_-]+\))?$/;
+
+        if (!pattern.test(dependency)) {
+            throw new Error(
+                `Invalid dependency at index ${index}: ${entry}`
+            );
+        }
+
+        return dependency;
+    });
+}
+
 export function parsePackageDefinition(
     value: unknown
 ): PackageDefinition {
@@ -218,6 +255,9 @@ export function parsePackageDefinition(
         description: requireString(
             definition.description,
             "description"
+        ),
+        dependencies: parseDependencies(
+            definition.dependencies
         ),
         maintainer: optionalString(
             definition.maintainer,
