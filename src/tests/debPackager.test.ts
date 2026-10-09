@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+    materializeDebRoot,
     writeDebConffiles,
     writeDebControl
 } from "../core/debPackager.js";
@@ -136,5 +137,66 @@ test(
             fs.statSync(debianDirectory).mode & 0o7777,
             0o755
         );
+    }
+);
+
+test(
+    "preserves staged directory permissions in Debian payload",
+    () => {
+        const workspace = fs.mkdtempSync(
+            path.join(os.tmpdir(), "embark-payload-mode-")
+        );
+
+        try {
+            const staged = path.join(workspace, "staged");
+            const nested = path.join(staged, "usr/lib/example");
+
+            fs.mkdirSync(nested, { recursive: true });
+
+            fs.chmodSync(staged, 0o755);
+            fs.chmodSync(path.join(staged, "usr"), 0o755);
+            fs.chmodSync(path.join(staged, "usr/lib"), 0o755);
+            fs.chmodSync(nested, 0o750);
+
+            fs.writeFileSync(
+                path.join(nested, "example.so"),
+                "test"
+            );
+
+            const result = materializeDebRoot(
+                staged,
+                path.join(workspace, "packages"),
+                {
+                    packageName: "example",
+                    version: "1.0.0",
+                    architecture: "amd64"
+                }
+            );
+
+            for (const relative of [".", "usr", "usr/lib"]) {
+                const destination = path.join(
+                    result.rootDirectory,
+                    relative
+                );
+
+                assert.equal(
+                    fs.statSync(destination).mode & 0o7777,
+                    0o755,
+                    relative
+                );
+            }
+
+            assert.equal(
+                fs.statSync(
+                    path.join(result.rootDirectory, "usr/lib/example")
+                ).mode & 0o7777,
+                0o750
+            );
+        } finally {
+            fs.rmSync(workspace, {
+                recursive: true,
+                force: true
+            });
+        }
     }
 );

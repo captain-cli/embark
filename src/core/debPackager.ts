@@ -173,6 +173,34 @@ export function materializeDebRoot(
         }
     );
 
+    function restoreDirectoryModes(
+        source: string,
+        destination: string
+    ): void {
+        const sourceMode =
+            fs.statSync(source).mode & 0o7777;
+
+        fs.chmodSync(destination, sourceMode);
+
+        for (const entry of fs.readdirSync(source, {
+            withFileTypes: true
+        })) {
+            if (!entry.isDirectory()) {
+                continue;
+            }
+
+            restoreDirectoryModes(
+                path.join(source, entry.name),
+                path.join(destination, entry.name)
+            );
+        }
+    }
+
+    restoreDirectoryModes(
+        stagedDirectory,
+        packageRoot
+    );
+
     return {
         rootDirectory: packageRoot
     };
