@@ -1,5 +1,11 @@
 # Embark
 
+<p align="center">
+  <img src="./assets/embark-banner.png"
+       alt="Embark — Stager builds the filesystem. Embark makes it native."
+       width="100%" />
+</p>
+
 Embark turns a filesystem already prepared by Captain Stager into a native operating-system package.
 
 > Stager builds the filesystem. Embark makes it native.
