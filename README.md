@@ -128,7 +128,7 @@ dpkg-deb --contents "$PACKAGE"
 
 **Verify the extracted application:**
 
-```
+```bash
 mkdir -p demo/extracted
 
 dpkg-deb --extract "$PACKAGE" demo/extracted
@@ -156,7 +156,7 @@ The package definition stays the same. Embark handles the backend-specific packa
 
 **Inspect and verify the RPM package:**
 
-```
+```bash
 RPM=".embark/rpm/rpmbuild/RPMS/x86_64/hello-embark-1.0.0-1.x86_64.rpm"
 
 rpm -qip "$RPM"
